@@ -26,6 +26,30 @@ namespace TotalDailyProfit
             harmony.PatchAll();
         }
 
+        //public override void OnUpdate()
+        //{
+        //    if (Input.GetKeyDown(KeyCode.F9))
+        //    {
+        //        Il2CppScheduleOne.UI.DailySummary.Instance.AddPlayerMoney(1000000f);
+        //        Il2CppScheduleOne.UI.DailySummary.Instance.AddDealerMoney(90000f);       
+        //        MelonLogger.Msg("Added to player and dealer money");
+        //    }
+       
+        //}
+
+    
+        public static string FormatNumber(float number)
+        {
+            // Convert the float to a string
+            string numberString = number.ToString("F0");
+            // Split the string into whole and decimal parts
+            string[] parts = numberString.Split('.');
+            // Add commas to the whole part
+            parts[0] = string.Format("{0:n0}", int.Parse(parts[0]));
+            // Join the parts back together
+            return string.Join(".", parts);
+        }
+
         [HarmonyPatch(typeof(Il2CppScheduleOne.UI.DailySummary), "DailySummary")]
         public class DailySummaryPatch
         {
@@ -36,13 +60,16 @@ namespace TotalDailyProfit
                 var dailySummary = __instance;
                 float playerMoney = dailySummary.moneyEarnedByPlayer;
                 float dealerMoney = dailySummary.moneyEarnedByDealers;
-                float total = playerMoney + dealerMoney;
+                float totalMoney = playerMoney + dealerMoney;
                 //round total to 0 decimal places
-                total = (float)Math.Round(total, 0);
+                totalMoney = (float)Math.Round(totalMoney, 0);
                 dealerMoney = (float)Math.Round(dealerMoney, 0);
+                //format the numbers with commas
+               var totalMoneyString = FormatNumber(totalMoney);
+               var dealerMoneyString = FormatNumber(dealerMoney);
 
 
-                dailySummary.DealerEarningsLabel.text = $"${dealerMoney} (${total})";
+                dailySummary.DealerEarningsLabel.text = $"${dealerMoneyString} (${totalMoneyString})";
 
             }
 
