@@ -6,7 +6,7 @@ using MelonLoader;
 using TotalDailyProfit;
 
 
-[assembly: MelonInfo(typeof(TotalDailyProfit.TotalDailyProfit), "TotalDailyProfit", "1.1.0", "Jc Dock")]
+[assembly: MelonInfo(typeof(TotalDailyProfit.TotalDailyProfit), "TotalDailyProfit", "1.2.0", "Jc Dock")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 
