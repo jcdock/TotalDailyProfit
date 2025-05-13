@@ -11,25 +11,50 @@ using Il2CppScheduleOne.Persistence.Datas;
 using ModManagerPhoneApp;
 
 
+
 namespace TotalDailyProfit
 {
     public class TotalDailyProfit : MelonMod
     {
-        public HarmonyLib.Harmony harmony;
+        
 
         public override void OnInitializeMelon()
         {
-           TotalDailyProfit.Category = MelonPreferences.CreateCategory("TotalDailyProfit_Main", "Total Daily Profit Settings");
-           TotalDailyProfit.Keybind = TotalDailyProfit.Category.CreateEntry<string>("Keybind", "F9", "Keybind to open/close the Daily Summary window.",null,false,false,null,null);
+           TotalDailyProfit.KeybindCategory = MelonPreferences.CreateCategory("TotalDailyProfit_Main", "Total Daily Profit Keybind Settings");
 
-           
+           TotalDailyProfit.Keybind = TotalDailyProfit.KeybindCategory.CreateEntry<string>("Keybind", "F9", "Keybind to open/close the Daily Summary window.",null,false,false,null,null);
+           TotalDailyProfit.CrtlModifier = TotalDailyProfit.KeybindCategory.CreateEntry<bool>("CrtlModifier", false, "Use Ctrl + Keybind.", null, false, false, null, null);
+           TotalDailyProfit.ShiftModifier = TotalDailyProfit.KeybindCategory.CreateEntry<bool>("ShiftModifier", false, "Use Shift + Keybind.", null, false, false, null, null);
+           TotalDailyProfit.AltModifier = TotalDailyProfit.KeybindCategory.CreateEntry<bool>("AltModifier", false, "Use Alt + Keybind.", null, false, false, null, null);
+       
 
-           SubscribeToModManagerEvents();
 
-           harmony = new HarmonyLib.Harmony("com.jcdock.totaldailyprofit");
+
+            SubscribeToModManagerEvents();
+
+       
+
+            harmony = new HarmonyLib.Harmony("com.jcdock.totaldailyprofit");
            harmony.PatchAll();
            LoggerInstance.Msg(base.Info.Name +  " v" + base.Info.Version + " Initialized");
         }
+
+        public override void OnSceneWasInitialized(int buildIndex, string sceneName)
+        {
+            if (sceneName == "Main")
+
+            {
+                var _keybind = TotalDailyProfit.Keybind.Value;
+             var isKeyValid = IsKeyBindValid(_keybind);
+                if (isKeyValid == false)
+                {
+                    TotalDailyProfit.Keybind.Value = "F9";
+                    LoggerInstance.Error("Keybind not set or is set to invalid key. Defaulting to F9.");
+                }
+               
+            }
+        }
+
 
         public override void OnDeinitializeMelon()
         {
@@ -38,27 +63,83 @@ namespace TotalDailyProfit
 
         public override void OnUpdate()
         {
+            var crtlModifier = TotalDailyProfit.CrtlModifier.Value;
+            var shiftModifier = TotalDailyProfit.ShiftModifier.Value;
+            var altModifier = TotalDailyProfit.AltModifier.Value;
 
-            if (Input.GetKeyDown(this.ParseKeybind(TotalDailyProfit.Keybind.Value)))
+
+            if (crtlModifier && shiftModifier && altModifier)
             {
-
-
-                Il2CppScheduleOne.UI.DailySummary dailySummary = Il2CppScheduleOne.UI.DailySummary.Instance;
-                if (dailySummary != null)
+                if (Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.LeftShift) && Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(ParseKeybind(TotalDailyProfit.Keybind.Value)))
                 {
-                    bool isOpen = dailySummary.IsOpen;
-                    if (!isOpen)
-                    {
-                        dailySummary.Open();
-                    }
-                    else
-                    {
-                        dailySummary.Close();
-                   
-                    }
+                    ToggleDailySummary();
                 }
+            }
+            else if (crtlModifier && shiftModifier)
+            {
+                if (Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(ParseKeybind(TotalDailyProfit.Keybind.Value)))
+                {
+                    ToggleDailySummary();
 
-            }  
+                }
+            }
+            else if (crtlModifier && altModifier)
+            {
+                if (Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(ParseKeybind(TotalDailyProfit.Keybind.Value)))
+                {
+                    ToggleDailySummary();
+
+                }
+            }
+            else if (shiftModifier && altModifier)
+            {
+                if (Input.GetKey(KeyCode.LeftShift) && Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(ParseKeybind(TotalDailyProfit.Keybind.Value)))
+                {
+                    ToggleDailySummary();
+
+                }
+            }
+            else if (crtlModifier)
+            {
+                if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(ParseKeybind(TotalDailyProfit.Keybind.Value)))
+                {
+                    ToggleDailySummary();
+                }
+            }
+            else if (shiftModifier)
+            {
+                if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(ParseKeybind(TotalDailyProfit.Keybind.Value)))
+                {
+                    ToggleDailySummary();
+                }
+            }
+            else if (altModifier)
+            {
+                if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(ParseKeybind(TotalDailyProfit.Keybind.Value)))
+                {
+                    ToggleDailySummary();
+                }
+            }
+            else
+            {
+                if (Input.GetKeyDown(ParseKeybind(TotalDailyProfit.Keybind.Value)))
+                {
+                    ToggleDailySummary();
+                }
+            }
+        }
+
+        public static void ToggleDailySummary()
+        {
+            if (Il2CppScheduleOne.UI.DailySummary.Instance.IsOpen)
+            {
+                Il2CppScheduleOne.UI.DailySummary.Instance.Close();
+              
+            }
+            else
+            {
+                Il2CppScheduleOne.UI.DailySummary.Instance.Open();
+            }
         }
 
         public static string FormatNumber(float number)
@@ -89,7 +170,8 @@ namespace TotalDailyProfit
                 dealerMoney = (float)Math.Round(dealerMoney, 0);
                 //format the numbers with commas
                var totalMoneyString = FormatNumber(totalMoney);
-               var dealerMoneyString = FormatNumber(dealerMoney);
+                //format the dealer money with commas
+                var dealerMoneyString = FormatNumber(dealerMoney);
 
 
                 dailySummary.DealerEarningsLabel.text = $"${dealerMoneyString} (${totalMoneyString})";
@@ -97,10 +179,14 @@ namespace TotalDailyProfit
             }
         }
 
+        private bool IsKeyBindValid(string keybind)
+        {
+            bool flag = Enum.TryParse<KeyCode>(keybind, out KeyCode keyCode);
+            return flag;
+        }
         private KeyCode ParseKeybind(string keybind)
         {
-            KeyCode keyCode;
-            bool flag = Enum.TryParse<KeyCode>(keybind, out keyCode);
+            bool flag = Enum.TryParse<KeyCode>(keybind, out KeyCode keyCode);
             KeyCode result;
             if (flag)
             {
@@ -108,10 +194,12 @@ namespace TotalDailyProfit
             }
             else
             {
-                result = KeyCode.F9;
+                result = KeyCode.None;
             }
             return result;
         }
+
+
 
         // All credit for the following code goes to the author of the Mod Manager, Prowiler.
         private void UnsubscribeFromModManagerEvents()
@@ -137,7 +225,7 @@ namespace TotalDailyProfit
             // Subscribe to Main Menu Config saves
             try
             {
-                ModSettingsEvents.OnMenuPreferencesSaved += HandleSettingsUpdate; // Can use the SAME handler
+                ModSettingsEvents.OnMenuPreferencesSaved += HandleSettingsUpdate; 
             }
             catch (Exception ex)
             {
@@ -148,18 +236,33 @@ namespace TotalDailyProfit
         private void HandleSettingsUpdate() // Can be static if it only accesses static fields/methods
         {
         
-            LoggerInstance.Msg("Mod Manager saved preferences. Reloading settings...");
             try
             {
-                TotalDailyProfit.Keybind = TotalDailyProfit.Category.GetEntry<string>("Keybind");
+                TotalDailyProfit.Keybind = TotalDailyProfit.KeybindCategory.GetEntry<string>("Keybind");
+                TotalDailyProfit.CrtlModifier = TotalDailyProfit.KeybindCategory.GetEntry<bool>("CrtlModifier");
+                TotalDailyProfit.ShiftModifier = TotalDailyProfit.KeybindCategory.GetEntry<bool>("ShiftModifier");
+                TotalDailyProfit.AltModifier = TotalDailyProfit.KeybindCategory.GetEntry<bool>("AltModifier");
 
+                var _keybind = TotalDailyProfit.Keybind.Value;
+                var isKeyValid = IsKeyBindValid(_keybind);
+                if (isKeyValid == false)
+                {
+                    TotalDailyProfit.Keybind.Value = "F9";
+                    LoggerInstance.Error("Keybind not set or is set to invalid key. Defaulting to F9.");
+                }
+           
                 LoggerInstance.Msg("Settings reloaded successfully.");
             }
             catch (System.Exception ex) { LoggerInstance.Error($"Error applying updated settings after save: {ex}"); }
         }
 
-        private static MelonPreferences_Category Category;
+        private static MelonPreferences_Category KeybindCategory;
         private static MelonPreferences_Entry<string> Keybind;
+        private static MelonPreferences_Entry<bool> debugMode;
+        private static MelonPreferences_Entry<bool> CrtlModifier;
+        private static MelonPreferences_Entry<bool> ShiftModifier;
+        private static MelonPreferences_Entry<bool> AltModifier;
+        public HarmonyLib.Harmony harmony;
 
 
     }
